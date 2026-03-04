@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Essay Planner - Plan Your Essay in 5 Minutes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .step { display: none; }
+        .step.active { display: block; }
+        .progress-bar { transition: width 0.3s ease; }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <div class="text-center mb-12 mt-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-3">IELTS Essay Planner</h1>
+            <p class="text-xl text-gray-600 mb-2">Plan Your Essay in 5 Minutes</p>
+            <p class="text-sm text-gray-500">Structured planning system for IELTS Writing Task 2</p>
+        </div>
+
+        <!-- Email Collection Modal (First-time users) -->
+        <div id="emailModal" class="modal">
+            <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md mx-4">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome! 👋</h2>
+                <p class="text-gray-600 mb-6">Get 1 FREE essay plan to try our system. Enter your email to start:</p>
+                
+                <input type="email" id="userEmail" 
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                    placeholder="your.email@example.com"
+                    required>
+                
+                <button onclick="submitEmail()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Start Planning Free →
+                </button>
+                
+                <p class="text-xs text-gray-500 mt-4 text-center">Your email is only used to send you your essay plans. We don't spam.</p>
+            </div>
+        </div>
+
+        <!-- Payment Gate Modal (After 1 free use) -->
+        <div id="paymentModal" class="modal">
+            <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md mx-4">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">You've used your free plan! 🎉</h2>
+                <p class="text-gray-600 mb-6">Want to plan more essays? Get 5 more plans for just $9</p>
+                
+                <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                    <p class="text-3xl font-bold text-blue-600 mb-2">$9</p>
+                    <p class="text-sm text-gray-700">✓ 5 essay plans</p>
+                    <p class="text-sm text-gray-700">✓ All question types</p>
+                    <p class="text-sm text-gray-700">✓ Instant access</p>
+                    <p class="text-sm text-gray-700">✓ Download as PDF</p>
+                </div>
+
+                <a href="https://gumroad.com/l/ielts-planner" target="_blank" 
+                    class="block w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition text-center mb-3">
+                    Get 5 More Plans - $9 →
+                </a>
+
+                <button onclick="closePaymentModal()" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition">
+                    Maybe Later
+                </button>
+
+                <p class="text-xs text-gray-500 mt-4 text-center">Need help with your essays? We offer <a href="#feedback" class="text-blue-600 underline">pattern analysis</a> across 3 essays for $49</p>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+            <p class="text-sm text-gray-600 mt-2 text-center">Step <span id="currentStep">1</span> of 5</p>
+        </div>
+
+        <!-- Main Container -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            
+            <!-- Step 1: Question Input -->
+            <div class="step active" id="step1">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Step 1: Your IELTS Question</h2>
+                <p class="text-gray-600 mb-4">Paste your IELTS Writing Task 2 question below:</p>
+                
+                <textarea id="question" rows="4" 
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Example: Some people believe that university students should pay for their education. Others think the government should pay. Discuss both views and give your opinion."></textarea>
+                
+                <div class="mt-6">
+                    <p class="text-sm text-gray-600 mb-2">Or try a sample question:</p>
+                    <select id="sampleQuestions" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="">Choose a sample question...</option>
+                        <option value="Many argue that schools are no longer necessary because children can learn so much from the internet. To what extent do you agree or disagree?">Opinion: Schools vs Internet Learning</option>
+                        <option value="Some people believe that professionals should be required to work in the country where they did their training. Others believe they should be free to work anywhere. Discuss both views and give your opinion.">Discussion: Professional Mobility</option>
+                        <option value="Traffic congestion is a major problem in cities. What are the causes and what solutions can you suggest?">Problem-Solution: Traffic</option>
+                        <option value="What are the advantages and disadvantages of technology in education?">Advantages-Disadvantages: Technology</option>
+                    </select>
+                </div>
+
+                <button onclick="goToStep(2)" class="mt-8 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Next →
+                </button>
+            </div>
+
+            <!-- Step 2: Question Type Detection -->
+            <div class="step" id="step2">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Step 2: Question Type</h2>
+                <p class="text-gray-600 mb-4">We detected your question type:</p>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <p class="font-semibold text-blue-900">Question Type: <span id="detectedType" class="text-blue-600"></span></p>
+                </div>
+
+                <p class="text-gray-600 mb-3">Is this correct?</p>
+                <div class="space-y-3 mb-6">
+                    <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="questionType" value="opinion" class="mr-3">
+                        <span>Opinion (To what extent do you agree/disagree?)</span>
+                    </label>
+                    <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="questionType" value="discussion" class="mr-3">
+                        <span>Discussion (Discuss both views and give your opinion)</span>
+                    </label>
+                    <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="questionType" value="problem-solution" class="mr-3">
+                        <span>Problem-Solution (What are the causes/solutions?)</span>
+                    </label>
+                    <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="questionType" value="advantages" class="mr-3">
+                        <span>Advantages-Disadvantages</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="goToStep(1)" class="w-1/2 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToStep(3)" class="w-1/2 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Position Selection -->
+            <div class="step" id="step3">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Step 3: Your Position</h2>
+                <div id="positionContent"></div>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="goToStep(2)" class="w-1/2 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToStep(4)" class="w-1/2 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Reasons -->
+            <div class="step" id="step4">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Step 4: Your Main Reasons</h2>
+                <p class="text-gray-600 mb-6">Give 2 main reasons to support your position:</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Reason 1:</label>
+                        <input type="text" id="reason1" maxlength="80"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Example: Classroom learning develops essential social skills">
+                        <p class="text-xs text-gray-500 mt-1">💡 Tip: Keep it simple - one clear idea (max 80 characters)</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Reason 2:</label>
+                        <input type="text" id="reason2" maxlength="80"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Example: Teachers provide structured guidance that online learning cannot">
+                        <p class="text-xs text-gray-500 mt-1">💡 Tip: Make this different from Reason 1</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="goToStep(3)" class="w-1/2 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToStep(5)" class="w-1/2 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Examples -->
+            <div class="step" id="step5">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Step 5: Your Examples</h2>
+                <p class="text-gray-600 mb-6">For each reason, give ONE specific example:</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Example for Reason 1:</label>
+                        <textarea id="example1" rows="2" maxlength="150"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Example: Students learn to collaborate on group projects, resolve conflicts with peers, and communicate effectively"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">💡 Tip: Be specific - use real situations (max 150 characters)</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Example for Reason 2:</label>
+                        <textarea id="example2" rows="2" maxlength="150"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Example: Teachers can adapt lessons to student needs and provide immediate feedback when concepts are unclear"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">💡 Tip: Use numbers, places, or concrete details</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="goToStep(4)" class="w-1/2 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        ← Back
+                    </button>
+                    <button onclick="generateOutline()" class="w-1/2 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition">
+                        Generate My Essay Outline →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Page -->
+            <div class="step" id="results" style="display:none;">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Essay Outline</h2>
+                
+                <div id="outlineContent" class="prose max-w-none"></div>
+
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="copyToClipboard()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        📋 Copy to Clipboard
+                    </button>
+                    <button onclick="downloadPDF()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition">
+                        📄 Download as PDF
+                    </button>
+                </div>
+
+                <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Need help improving your essay?</h3>
+                    <p class="text-gray-700 mb-4">Get professional feedback on your writing</p>
+                    <button onclick="showFeedbackInfo()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        See Feedback Options →
+                    </button>
+                </div>
+
+                <button onclick="location.reload()" class="mt-6 w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    🔄 Plan Another Essay
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-gray-500 text-sm">
+            <p>© 2025 IELTS Essay Planner | Structured planning for IELTS success</p>
+            <p class="mt-2">
+                <a href="#" onclick="showFeedbackInfo()" class="text-blue-600 hover:underline">Need essay feedback?</a> | 
+                <a href="mailto:support@ieltsplanner.com" class="text-blue-600 hover:underline">Contact</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Feedback Info Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="bg-white rounded-lg shadow-2xl p-8 max-w-lg mx-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Get Professional Feedback</h2>
+            
+            <div class="space-y-4 mb-6">
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4">
+                    <p class="font-semibold text-blue-900 mb-1">Single Essay Analysis - $9</p>
+                    <p class="text-sm text-gray-700">We identify your specific mistakes and how to fix them</p>
+                    <p class="text-xs text-gray-600 mt-2">Delivery: 24 hours</p>
+                </div>
+
+                <div class="border-l-4 border-purple-500 bg-purple-50 p-4">
+                    <p class="font-semibold text-purple-900 mb-1">Pattern Analysis (3 essays) - $49</p>
+                    <p class="text-sm text-gray-700">We analyze 3 essays to identify your CONSISTENT error patterns that repeat across all topics</p>
+                    <p class="text-xs text-gray-600 mt-2">Delivery: 48 hours</p>
+                </div>
+            </div>
+
+            <a href="mailto:feedback@ieltsplanner.com?subject=Essay%20Feedback%20Request" 
+                class="block w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition text-center mb-3">
+                Request Feedback →
+            </a>
+
+            <button onclick="closeFeedbackModal()" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentStepNum = 1;
+        let usageCount = parseInt(localStorage.getItem('plannerUsage') || '0');
+        let userEmail = localStorage.getItem('userEmail') || '';
+        let hasPaid = localStorage.getItem('hasPaid') === 'true';
+
+        // Check if user needs to enter email or pay
+        window.addEventListener('load', function() {
+            if (!userEmail && usageCount === 0) {
+                // First-time user - show email modal
+                document.getElementById('emailModal').classList.add('active');
+            } else if (usageCount >= 1 && !hasPaid) {
+                // Used free plan - show payment gate
+                document.getElementById('paymentModal').classList.add('active');
+            }
+        });
+
+        function submitEmail() {
+            const email = document.getElementById('userEmail').value.trim();
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Store email
+            localStorage.setItem('userEmail', email);
+            userEmail = email;
+            
+            // Close modal
+            document.getElementById('emailModal').classList.remove('active');
+            
+            // Optional: Send email to your backend (you can add this later)
+            // For now, just log it
+            console.log('User email collected:', email);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+        }
+
+        function showFeedbackInfo() {
+            document.getElementById('feedbackModal').classList.add('active');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('active');
+        }
+
+        // Function to check and enforce usage limits
+        function checkUsageLimit() {
+            if (usageCount >= 1 && !hasPaid) {
+                document.getElementById('paymentModal').classList.add('active');
+                return false;
+            }
+            return true;
+        }
+
+        // Track when outline is generated (counts as 1 use)
+        function trackUsage() {
+            if (!hasPaid) {
+                usageCount++;
+                localStorage.setItem('plannerUsage', usageCount.toString());
+            }
+        }
+
+        // Sample question selection
+        document.getElementById('sampleQuestions').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('question').value = this.value;
+            }
+        });
+
+        function goToStep(step) {
+            // Validation
+            if (step === 2 && !document.getElementById('question').value.trim()) {
+                alert('Please enter your IELTS question');
+                return;
+            }
+            
+            if (step === 3 && !document.querySelector('input[name="questionType"]:checked')) {
+                alert('Please select a question type');
+                return;
+            }
+
+            if (step === 4 && !document.querySelector('input[name="position"]:checked')) {
+                alert('Please select your position');
+                return;
+            }
+
+            if (step === 5) {
+                if (!document.getElementById('reason1').value.trim() || !document.getElementById('reason2').value.trim()) {
+                    alert('Please provide both reasons');
+                    return;
+                }
+            }
+
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            
+            // Show target step
+            document.getElementById('step' + step).classList.add('active');
+            currentStepNum = step;
+            
+            // Update progress
+            document.getElementById('progressBar').style.width = (step / 5 * 100) + '%';
+            document.getElementById('currentStep').textContent = step;
+
+            // Detect question type when moving to step 2
+            if (step === 2) {
+                detectQuestionType();
+            }
+
+            // Generate position options when moving to step 3
+            if (step === 3) {
+                generatePositionOptions();
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function detectQuestionType() {
+            const question = document.getElementById('question').value.toLowerCase();
+            let type = 'opinion';
+
+            if (question.includes('discuss both') || question.includes('both views')) {
+                type = 'discussion';
+            } else if (question.includes('advantages and disadvantages') || question.includes('benefits and drawbacks')) {
+                type = 'advantages';
+            } else if (question.includes('causes') || question.includes('solutions') || question.includes('problems')) {
+                type = 'problem-solution';
+            } else if (question.includes('agree') || question.includes('disagree') || question.includes('extent')) {
+                type = 'opinion';
+            }
+
+            const typeNames = {
+                'opinion': 'Opinion Essay',
+                'discussion': 'Discussion Essay',
+                'problem-solution': 'Problem-Solution Essay',
+                'advantages': 'Advantages-Disadvantages Essay'
+            };
+
+            document.getElementById('detectedType').textContent = typeNames[type];
+            document.querySelector(`input[name="questionType"][value="${type}"]`).checked = true;
+        }
+
+        function generatePositionOptions() {
+            const questionType = document.querySelector('input[name="questionType"]:checked').value;
+            const content = document.getElementById('positionContent');
+
+            const templates = {
+                'opinion': `
+                    <p class="text-gray-600 mb-4">What's your position on this issue?</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="strongly-agree" class="mr-3">
+                            <span>Strongly Agree</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="agree" class="mr-3">
+                            <span>Agree (with some conditions)</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="disagree" class="mr-3">
+                            <span>Disagree</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="strongly-disagree" class="mr-3">
+                            <span>Strongly Disagree</span>
+                        </label>
+                    </div>
+                `,
+                'discussion': `
+                    <p class="text-gray-600 mb-4">Which view do you support more?</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="view-a" class="mr-3">
+                            <span>I support the first view (but will discuss both)</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="view-b" class="mr-3">
+                            <span>I support the second view (but will discuss both)</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="balanced" class="mr-3">
+                            <span>Balanced view (both have merit)</span>
+                        </label>
+                    </div>
+                `,
+                'problem-solution': `
+                    <p class="text-gray-600 mb-4">You'll discuss problems and solutions. Select your approach:</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="2-problems-2-solutions" class="mr-3">
+                            <span>2 main problems → 2 solutions</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="causes-then-solutions" class="mr-3">
+                            <span>Discuss causes → then solutions</span>
+                        </label>
+                    </div>
+                `,
+                'advantages': `
+                    <p class="text-gray-600 mb-4">What's your overall position?</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="advantages-outweigh" class="mr-3">
+                            <span>Advantages outweigh disadvantages</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="disadvantages-outweigh" class="mr-3">
+                            <span>Disadvantages outweigh advantages</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="position" value="balanced-view" class="mr-3">
+                            <span>Both have equal weight</span>
+                        </label>
+                    </div>
+                `
+            };
+
+            content.innerHTML = templates[questionType];
+        }
+
+        function generateOutline() {
+            // Check usage limit first
+            if (!checkUsageLimit()) {
+                return; // Payment modal will show automatically
+            }
+
+            // Validate
+            if (!document.getElementById('example1').value.trim() || !document.getElementById('example2').value.trim()) {
+                alert('Please provide both examples');
+                return;
+            }
+
+            // Collect all data
+            const data = {
+                question: document.getElementById('question').value,
+                type: document.querySelector('input[name="questionType"]:checked').value,
+                position: document.querySelector('input[name="position"]:checked').value,
+                reason1: document.getElementById('reason1').value,
+                reason2: document.getElementById('reason2').value,
+                example1: document.getElementById('example1').value,
+                example2: document.getElementById('example2').value
+            };
+
+            // Generate outline HTML
+            const outline = `
+                <div class="bg-gray-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <p class="text-sm font-semibold text-gray-700">Question:</p>
+                    <p class="text-gray-900">${data.question}</p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-200 pb-2">INTRODUCTION (40-50 words)</h3>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Suggested structure:</p>
+                        <p class="text-gray-900 italic">"[Paraphrase the question]. While [acknowledge opposing view], I believe [your position] because ${data.reason1.toLowerCase()} and ${data.reason2.toLowerCase()}."</p>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3">✍️ Write your introduction following this structure</p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-200 pb-2">BODY PARAGRAPH 1 (80-90 words)</h3>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Topic: ${data.reason1}</p>
+                        <div class="space-y-2 mt-3 text-sm text-gray-900">
+                            <p>• <strong>Sentence 1:</strong> State the reason clearly</p>
+                            <p>• <strong>Sentences 2-3:</strong> Explain HOW or WHY this is true</p>
+                            <p>• <strong>Sentence 4:</strong> Give your example: "${data.example1}"</p>
+                            <p>• <strong>Sentence 5:</strong> Explain the consequence/importance</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3">✍️ Write your paragraph following this structure</p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-200 pb-2">BODY PARAGRAPH 2 (80-90 words)</h3>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Topic: ${data.reason2}</p>
+                        <div class="space-y-2 mt-3 text-sm text-gray-900">
+                            <p>• <strong>Sentence 1:</strong> State the reason clearly</p>
+                            <p>• <strong>Sentences 2-3:</strong> Explain HOW or WHY this is true</p>
+                            <p>• <strong>Sentence 4:</strong> Give your example: "${data.example2}"</p>
+                            <p>• <strong>Sentence 5:</strong> Explain the consequence/importance</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3">✍️ Write your paragraph following this structure</p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-200 pb-2">CONCLUSION (40-50 words)</h3>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-3">
+                        <p class="text-sm font-bold text-red-900 mb-2">⚠️ CRITICAL RULE: Only summarize what you already discussed!</p>
+                        <p class="text-sm text-red-800">DO NOT introduce new ideas, reasons, or examples in your conclusion.</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Suggested structure:</p>
+                        <p class="text-gray-900 italic">"In conclusion, [restate position] because ${data.reason1.toLowerCase()} and ${data.reason2.toLowerCase()}. [Final thought about importance]."</p>
+                    </div>
+                    <div class="mt-4 bg-white p-4 border border-gray-300 rounded-lg">
+                        <p class="text-sm font-semibold text-green-700 mb-2">✅ USE these in your conclusion:</p>
+                        <ul class="text-sm text-gray-900 space-y-1">
+                            <li>• ${data.reason1}</li>
+                            <li>• ${data.reason2}</li>
+                        </ul>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3">✍️ Write your conclusion using ONLY the reasons above</p>
+                </div>
+            `;
+
+            document.getElementById('outlineContent').innerHTML = outline;
+            
+            // Track usage (counts as 1 use)
+            trackUsage();
+            
+            // Show results
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('progressBar').style.width = '100%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const content = document.getElementById('outlineContent').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('✅ Outline copied to clipboard!');
+            });
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const content = document.getElementById('outlineContent').innerText;
+            const lines = doc.splitTextToSize(content, 180);
+            
+            doc.setFontSize(16);
+            doc.text('IELTS Essay Outline', 15, 15);
+            
+            doc.setFontSize(10);
+            doc.text(lines, 15, 30);
+            
+            doc.save('ielts-essay-outline.pdf');
+        }
+    </script>
+</body>
+</html>
