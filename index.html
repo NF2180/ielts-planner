@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>IELTS Writing Diagnostic</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6fb;
+padding:40px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
+
+textarea{
+width:100%;
+height:180px;
+padding:12px;
+font-size:15px;
+margin-top:10px;
+}
+
+button{
+margin-top:15px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.result{
+margin-top:25px;
+background:#eef2ff;
+padding:20px;
+border-radius:8px;
+}
+
+.scoreBox{
+margin-top:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>IELTS Writing Diagnostic Tool</h2>
+
+<p>Paste a paragraph from your IELTS essay.</p>
+
+<textarea id="essay"></textarea>
+
+<button onclick="analyzeEssay()">Analyze Writing</button>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+async function analyzeEssay(){
+
+let text=document.getElementById("essay").value;
+
+let sentences=text.split(/[.!?]/).filter(s=>s.trim().length>0);
+
+let words=text.split(/\s+/);
+
+let grammarIssues=0;
+
+/* LANGUAGE TOOL CALL */
+
+let formData=new URLSearchParams();
+formData.append("text",text);
+formData.append("language","en-US");
+
+let response=await fetch("https://api.languagetool.org/v2/check",{
+method:"POST",
+body:formData
+});
+
+let data=await response.json();
+
+grammarIssues=data.matches.length;
+
+/* ---------- GRAMMAR SCORE ---------- */
+
+let grammarScore=10-Math.min(grammarIssues,8);
+
+
+/* ---------- IDEA DENSITY ---------- */
+
+let longSentences=sentences.filter(s=>s.split(" ").length>25).length;
+
+let coherenceScore=10-longSentences*2;
+if(coherenceScore<3) coherenceScore=3;
+
+/* ---------- TASK RESPONSE ---------- */
+
+let vagueWords=["good","bad","many advantages","things","very important"];
+
+let vagueCount=0;
+
+for(let w of vagueWords){
+
+if(text.toLowerCase().includes(w)){
+vagueCount++;
+}
+
+}
+
+let taskScore=10-vagueCount*2;
+if(taskScore<4) taskScore=4;
+
+/* ---------- LEXICAL RESOURCE ---------- */
+
+let uniqueWords=new Set(words);
+
+let lexicalScore=Math.round((uniqueWords.size/words.length)*10);
+
+if(lexicalScore>10) lexicalScore=10;
+if(lexicalScore<4) lexicalScore=4;
+
+/* ---------- DIAGNOSTIC TEXT ---------- */
+
+let resultHTML="<h3>IELTS Diagnostic Scores (/10)</h3>";
+
+resultHTML+=`
+<div class="scoreBox">
+Task Response: ${taskScore}/10<br>
+Coherence & Cohesion: ${coherenceScore}/10<br>
+Lexical Resource: ${lexicalScore}/10<br>
+Grammar Accuracy: ${grammarScore}/10
+</div>
+`;
+
+/* ---------- ACTION PLAN ---------- */
+
+resultHTML+=`<h3>Improvement Plan</h3>`;
+
+resultHTML+=`
+<b>Grammar:</b><br>
+Focus on these 5 common issues:
+<ul>
+<li>Missing verb in sentence</li>
+<li>Incorrect prepositions</li>
+<li>Run-on sentences</li>
+<li>Incorrect article usage (a/an/the)</li>
+<li>Punctuation errors</li>
+</ul>
+`;
+
+resultHTML+=`
+<b>Coherence:</b>
+<ul>
+<li>Limit sentences to one idea</li>
+<li>Use linking words (however, therefore, for example)</li>
+<li>Start paragraphs with clear topic sentences</li>
+<li>Avoid overly long sentences</li>
+<li>Maintain logical flow</li>
+</ul>
+`;
+
+resultHTML+=`
+<b>Task Response:</b>
+<ul>
+<li>State your opinion clearly</li>
+<li>Support each idea with a reason</li>
+<li>Add a short example</li>
+<li>Avoid vague phrases</li>
+<li>Address both sides of the question</li>
+</ul>
+`;
+
+resultHTML+=`
+<b>Vocabulary:</b>
+<ul>
+<li>Avoid repeating common words</li>
+<li>Use topic-specific vocabulary</li>
+<li>Replace simple adjectives</li>
+<li>Use academic connectors</li>
+<li>Vary sentence openings</li>
+</ul>
+`;
+
+/* ---------- PRACTICE EXERCISE ---------- */
+
+resultHTML+=`
+<h3>Practice Exercise</h3>
+
+Rewrite the sentence below using clear structure.
+
+<b>Weak sentence:</b><br>
+"Working from home good because many advantages."
+
+<b>Target structure:</b><br>
+Claim → Reason → Example
+
+<b>Example:</b><br>
+Working from home improves productivity because employees avoid commuting.
+For example, many workers use saved travel time to complete tasks faster.
+`;
+
+/* ---------- GRAMMAR ISSUES LIST ---------- */
+
+resultHTML+=`<h3>Detected Grammar Issues</h3>`;
+
+data.matches.slice(0,5).forEach(m=>{
+
+resultHTML+=`• ${m.message}<br>`;
+
+});
+
+document.getElementById("result").innerHTML=resultHTML;
+
+}
+
+</script>
+
+</body>
+
+</html>
